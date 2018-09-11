@@ -1,0 +1,22 @@
+{
+  "name": "automate_reg",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "start": "npm run build && node lib/main.js"
+  },
+  "dependencies": {
+    "@types/node": "^10.5.5",
+    "@types/puppeteer": "^1.6.3",
+    "dotenv": "^6.0.0",
+    "puppeteer-core": "^1.8.0"
+  },
+  "devDependencies": {
+    "@types/dotenv": "^4.0.3",
+    "eslint": "^5.5.0",
+    "eslint-config-google": "^0.10.0",
+    "nodemon": "^1.18.4"
+  }
+}
