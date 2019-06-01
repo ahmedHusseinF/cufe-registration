@@ -1,17 +1,25 @@
-import PuppeteerWrapper from "./puppeteer";
+import puppeteer from 'puppeteer';
+import {
+  navigationIdleWait,
+  LOGIN_FORM_USERNAME,
+  typingDelayOptions,
+  LOGIN_FORM_PASSWORD,
+  INCORRECT_LOGIN_CREDS,
+  LOGIN_FORM_SUBMIT_BTN,
+} from './constants';
 
 /**
- *
+ * @desc This class handles logging to the portal ONLY
  */
-export default class Login {
-  puppeteer: PuppeteerWrapper;
+export class Login {
+  page: puppeteer.Page;
   loginUrl = `https://std.eng.cu.edu.eg`;
   /**
    * @desc bind the puppeteer instance
-   * @param {!PuppeteerWrapper} puppeteer
+   * @param {puppeteer.Page} puppeteer
    */
-  constructor(puppeteer: PuppeteerWrapper) {
-    this.puppeteer = puppeteer;
+  constructor(page: puppeteer.Page) {
+    this.page = page;
   }
 
   /**
@@ -20,20 +28,21 @@ export default class Login {
    * @param {string} password
    */
   async login(username: string, password: string) {
-    if (!this.puppeteer.page) return;
+    await this.page.goto(this.loginUrl, navigationIdleWait);
 
-    await this.puppeteer.gotoPage(this.loginUrl);
+    await this.page.type(LOGIN_FORM_USERNAME, username, typingDelayOptions);
+    await this.page.type(LOGIN_FORM_PASSWORD, password, typingDelayOptions);
 
-    await this.puppeteer.typeIntoField("#txtUsername", username);
-    await this.puppeteer.typeIntoField("#txtPassword", password);
+    await Promise.all([
+      this.page.waitForNavigation(navigationIdleWait),
+      this.page.click(LOGIN_FORM_SUBMIT_BTN),
+    ]);
 
-    await this.puppeteer.clickButtonWithNavigation("#ext-gen24");
+    const pageContent = await this.page.content();
 
-    const pageContent = await this.puppeteer.page.content();
-
-    if (pageContent.includes("incorrect")) {
+    if (pageContent.includes(INCORRECT_LOGIN_CREDS)) {
       // TODO: send notification for bad username/password
-      console.error("detected incorrect");
+      console.error('detected incorrect login credentials');
       return false;
     }
 

@@ -1,9 +1,17 @@
-import Login from "./login";
-import PuppeteerWrapper from "./puppeteer";
+import puppeteer from 'puppeteer-core';
+import {Login} from './login';
+import {
+  CLOSED_REG_STRING,
+  START_MSG_BUTTON_ID,
+  SECOND_PAGE_NEXT_BUTTON_ID,
+  navigationDOMWait,
+  RETRY_PAGE_BUTTON_ID,
+  navigationIdleWait,
+} from './constants';
 
 export interface Course {
   code: string;
-  lecDay: "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday" | number;
+  lecDay: 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | number;
   lecLocation: string;
   lecStart: number;
   tutLocation: string;
@@ -11,52 +19,51 @@ export interface Course {
 }
 
 /**
- * @desc this is for registeration process
+ * @desc this is for registeration process top to bottom
  */
-export default class Registeration {
-  puppeteer: PuppeteerWrapper;
+export class Registeration {
   regUrl = `https://std.eng.cu.edu.eg/SIS/Modules/MetaLoader.aspx?path=~/SIS/Modules/Student/Registration/Registration.ascx`;
+  page: puppeteer.Page;
   days = {
     Sunday: 0,
     Monday: 1,
     Tuesday: 2,
     Wednesday: 3,
-    Thursday: 4
+    Thursday: 4,
   };
+
   /**
-   *
-   * @param {PuppeteerWrapper} puppeteer
+   * @param {puppeteer.Page} page
    */
-  constructor(puppeteer: PuppeteerWrapper) {
-    this.puppeteer = puppeteer;
+  constructor(page: puppeteer.Page) {
+    this.page = page;
   }
 
   /**
    * @desc converts normal day string to an index for window.TimeTable traversal
-   * @param {string} day
+   * @param {'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday'} day
    * @return {number}
-   * @memberof Registeration
    */
-  convertDay(
-    day: "Sunday" | "Monday" | "Tuesday" | "Wednesday" | "Thursday"
-  ): number {
+  convertDay(day: 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday') {
     return this.days[day];
   }
 
   /**
    * @desc this inits the registeration process by going to the page
-   * @memberof Registeration
    */
   async initReg() {
-    await this.puppeteer.gotoPage(this.regUrl);
+    await this.page.goto(this.regUrl);
 
-    const pageContent = await this.puppeteer.getPageContent();
-    if (pageContent.includes("closed")) {
-      // reg hasn't yet opened
+    const pageContent = await this.page.content();
+    if (pageContent.includes(CLOSED_REG_STRING)) {
+      // reg hasn't opened yet
       return false;
     }
 
-    await this.puppeteer.clickButtonWithNavigation("#ctl08_ButMessageShown");
+    await Promise.all([
+      this.page.waitForNavigation(navigationDOMWait),
+      this.page.click(START_MSG_BUTTON_ID),
+    ]);
 
     return true;
   }
@@ -65,11 +72,13 @@ export default class Registeration {
    * @desc this is the MAIN entry point to perform all the registeration
    * @param {string} username
    * @param {string} password
-   * @param {any[]} courses
+   * @param {Course[]} courses
    */
   async handleReg(username: string, password: string, courses: Course[]) {
     const isLogged = await this.handleLogin(username, password);
-    console.log({ isLogged });
+
+    console.log({isLogged});
+
     if (isLogged) {
       let isOk = await this.initReg();
 
@@ -77,23 +86,28 @@ export default class Registeration {
         isOk = await this.retry();
       }
 
-      courses = courses.map(course => {
-        if (typeof course.lecDay !== "number")
+      // all days should be indexed from 0 to 5
+      courses = courses.map((course) => {
+        if (typeof course.lecDay !== 'number') {
           course.lecDay = this.convertDay(course.lecDay);
+        }
         return course;
       });
 
       await this.selectLectures(courses);
 
-      const clickedButton = await this.puppeteer.clickButtonWithNavigation(
-        "#ctl08_nextPage"
-      );
+      const nextButton = await this.page.$(SECOND_PAGE_NEXT_BUTTON_ID);
 
-      if (!clickedButton) {
-        return console.log("DRY RUNNNNNN");
+      if (!nextButton) {
+        return console.log('DRY RUNNNNNN');
       }
 
-      //await this.handleCaptchaPage(password);
+      await Promise.all([
+        this.page.waitForNavigation(navigationDOMWait),
+        this.page.click(SECOND_PAGE_NEXT_BUTTON_ID),
+      ]);
+
+      // await this.handleCaptchaPage(password);
     }
   }
 
@@ -103,46 +117,46 @@ export default class Registeration {
    * @param {string} password
    */
   async handleLogin(username: string, password: string) {
-    const loginHandler = new Login(this.puppeteer);
-
-    return await loginHandler.login(username, password);
+    return await new Login(this.page).login(username, password);
   }
 
   /**
    * @desc inject the courses into the window.TimeTable and
    * UpdateStudentTimeTable to calculate the credits and open the next button
-   * @param {any[]} theCourses
-   * @memberof Registeration
+   * @param {Course[]} theCourses
    */
   async selectLectures(theCourses: Course[]) {
     // @ts-ignore
-    await this.puppeteer.evaluate(function(courses) {
+    await this.page.evaluate(function(courses) {
       // * BROWSER CONTEXT
       // * too much ts-ignore here because this is browser
+      // * and typescripts complains a lot
       // @ts-ignore
-      courses.every(val => {
-        const code = val.code;
-        const lecDay = val.lecDay;
-        const lecLocation = val.lecLocation;
-        const lecStart = val.lecStart;
-        const tutLocation = val.tutLocation;
-        const tutStart = val.tutStart;
+      courses.every((course) => {
+        const {
+          code,
+          lecDay,
+          lecLocation,
+          lecStart,
+          tutLocation,
+          tutStart,
+        } = course;
         // @ts-ignore
         const lecDayLectures = window.TimeTable[lecDay].Lectures;
         // @ts-ignore
-        lecDayLectures.every(lec => {
+        lecDayLectures.every((lec) => {
           if (
             lec.Code.toLowerCase() === code.toLowerCase() &&
             lec.Location.includes(lecLocation.toLowerCase()) &&
             parseInt(lec.Start) === (lecStart + 5) % 12
           ) {
             lec.Selected = true;
-            if (lec.Group !== "" && lec.Group !== ",") {
+            if (lec.Group !== '' && lec.Group !== ',') {
               // this lecture has tutorials
               // @ts-ignore
               const tutsArray = GetLecturesFromID(lec.Group);
               // @ts-ignore
-              tutsArray.every(tut => {
+              tutsArray.every((tut) => {
                 if (
                   tut.Code.toLowerCase() === code.toLowerCase() &&
                   tut.Location.includes(tutLocation.toLowerCase()) &&
@@ -164,6 +178,7 @@ export default class Registeration {
         return true;
       });
       // @ts-ignore
+      // need to call this function because it unlocks the next button
       UpdateStudentTimeTable();
       // @ts-ignore
     }, theCourses);
@@ -172,30 +187,29 @@ export default class Registeration {
   /**
    * @desc it keeps refreshing the page until the registeration opens
    * @return {boolean}
-   * @memberof Registeration
    */
   async retry() {
-    await this.puppeteer.clickButtonWithNavigation("#ctl08_ButCheckOpen");
+    await Promise.all([
+      this.page.waitForNavigation(navigationIdleWait),
+      this.page.click(RETRY_PAGE_BUTTON_ID),
+    ]);
 
-    const tabContent = await this.puppeteer.getPageContent();
+    const tabContent = await this.page.content();
 
-    return !tabContent.includes("closed");
+    return !tabContent.includes(CLOSED_REG_STRING);
   }
 
   /**
    * @desc this handles the form of the captcha page
    * @param {string} password
-   * @memberof Registeration
    */
   async handleCaptchaPage(password: string) {
-    await this.puppeteer.typeIntoField("#ctl08_txtPassword", password);
-
+    // await this.page.typeIntoField('#ctl08_txtPassword', password);
     // focus on the captcha
     /* await this.puppeteer.typeIntoField(
         'input[name="ctl08$CaptchaControl1"]',
         ''
     ); */
-
     /* const imageBuffer = await this.puppeteer.getImage("img");
 
     const res = await tess.recognize(imageBuffer);
@@ -208,7 +222,6 @@ export default class Registeration {
     //    `input[name="ctl08$CaptchaControl1"]`,
     //    result.text.toLowerCase()
     // );
-
     // await this.puppeteer.clickButtonWithNavigation('#ctl08_ButAccept');
   }
 }
