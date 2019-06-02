@@ -14,12 +14,13 @@
   },
   "dependencies": {
     "dotenv": "^6.2.0",
-    "puppeteer-core": "^1.17.0"
+    "puppeteer-core": "^1.17.0",
+    "tesseract.js": "^2.0.0-alpha.10"
   },
   "devDependencies": {
     "@types/dotenv": "^6.1.0",
-    "@types/puppeteer-core": "^1.9.0",
     "@types/node": "^11.11.4",
+    "@types/puppeteer-core": "^1.9.0",
     "eslint": "^5.5.0",
     "eslint-config-google": "^0.10.0",
     "typescript": "^3.4.1"
