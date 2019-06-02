@@ -1,6 +1,7 @@
 import dotenv from 'dotenv';
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
 import {Registeration} from './modules/registeration';
+const courses = require('../courses.json');
 
 dotenv.config();
 
@@ -20,30 +21,12 @@ async function main() {
 
   const reg = new Registeration(currentTabs[0]);
 
-  if (typeof ID === 'undefined') {
-    return;
-  }
-  if (typeof PASSWORD === 'undefined') {
-    return;
+  if (typeof ID === 'undefined' || typeof PASSWORD === 'undefined') {
+    throw new TypeError(`ID and PASSWORD have to both exist in .env file`);
   }
 
-  await reg.handleReg(ID, PASSWORD, []);
+  await reg.handleReg(ID, PASSWORD, courses);
 }
-
-main().catch(console.error);
-
-(async () => {})();
-
-/*
-  {
-    code: 'cmpn402',
-    lecDay: 'Wednesday',
-    lecLocation: '3704',
-    lecStart: 11,
-    tutLocation: '18303',
-    tutStart: 8,
-  }
- */
 
 process.on('unhandledRejection', (...args) => {
   console.error(...args);
@@ -51,3 +34,5 @@ process.on('unhandledRejection', (...args) => {
   // * This is done to prevent chrome from closing on any
   // * malfunction on any page
 });
+
+main().catch(console.error);
