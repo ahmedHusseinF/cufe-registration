@@ -65,3 +65,6 @@ typings/
 
 # js files from typescript
 *.js
+
+# captcha images from tmp
+tmp/*.png
