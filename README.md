@@ -9,7 +9,7 @@ We need x steps to fully configure this "tool"
 
 1. Create a file named .env in the root of the project
 
-```sh
+```shell
 $ touch .env
 ```
 
@@ -23,7 +23,7 @@ PATH_TO_CHROME=
 
 3. Run the code with the following command
 
-```sh
+```shell
 $ npm install && npm start
 ```
 
@@ -31,7 +31,6 @@ $ npm install && npm start
 5. Profit
 
 # Roadmap
-
 
 # Contribute
 
