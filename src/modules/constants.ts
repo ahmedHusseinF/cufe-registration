@@ -12,6 +12,8 @@ export const LOGIN_FORM_PASSWORD = '#txtPassword';
 
 export const LOGIN_FORM_SUBMIT_BTN = '#ext-gen24';
 
+export const CAPTCHA_INPUT_SELECTOR = `input[name="ctl08$CaptchaControl1"]`;
+
 export const SECOND_PAGE_NEXT_BUTTON_ID = '#ctl08_nextPage';
 
 export const CLOSED_REG_STRING = 'closed';
@@ -25,7 +27,7 @@ export const navigationDOMWait: puppeteer.NavigationOptions = {
 
 export const navigationIdleWait: puppeteer.NavigationOptions = {
   timeout: 0, // means infinte timeout
-  waitUntil: 'networkidle0',
+  waitUntil: 'networkidle2',
 };
 
 export const typingDelayOptions = {
