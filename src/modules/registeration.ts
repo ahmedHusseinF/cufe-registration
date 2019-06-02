@@ -1,4 +1,7 @@
 import puppeteer from 'puppeteer-core';
+// @ts-ignore
+import {TesseractWorker} from 'tesseract.js';
+import {resolve} from 'path';
 import {Login} from './login';
 import {
   CLOSED_REG_STRING,
@@ -7,7 +10,10 @@ import {
   navigationDOMWait,
   RETRY_PAGE_BUTTON_ID,
   navigationIdleWait,
+  PASSWORD_INPUT_ID,
+  CAPTCHA_INPUT_SELECTOR,
 } from './constants';
+import {truncate} from 'fs';
 
 export interface Course {
   code: string;
@@ -17,6 +23,8 @@ export interface Course {
   tutLocation: string;
   tutStart: number;
 }
+
+const worker = new TesseractWorker();
 
 /**
  * @desc this is for registeration process top to bottom
@@ -107,7 +115,7 @@ export class Registeration {
         this.page.click(SECOND_PAGE_NEXT_BUTTON_ID),
       ]);
 
-      // await this.handleCaptchaPage(password);
+      await this.handleCaptchaPage(password);
     }
   }
 
@@ -204,12 +212,37 @@ export class Registeration {
    * @param {string} password
    */
   async handleCaptchaPage(password: string) {
-    // await this.page.typeIntoField('#ctl08_txtPassword', password);
-    // focus on the captcha
-    /* await this.puppeteer.typeIntoField(
-        'input[name="ctl08$CaptchaControl1"]',
-        ''
-    ); */
+    await this.page.type(PASSWORD_INPUT_ID, password);
+    await this.page.focus(CAPTCHA_INPUT_SELECTOR);
+
+    const el = await this.page.$('img');
+
+    if (!el) {
+      console.error(`Captcha image somehow doesn't exist`);
+      return;
+    }
+
+    // TODO: path.resolve
+    const imagePath = resolve(
+        __dirname,
+        `../../tmp/${Math.floor(Math.random() * 100000)}.png`
+    );
+
+    await el.screenshot({
+      path: imagePath,
+      omitBackground: true,
+    });
+
+    worker
+        .recognize(imagePath, 'eng')
+        .progress((message: any) => console.log(message))
+        .catch((err: Error) => console.error(err))
+        .then((result: any) => {
+          this.page
+              .type(CAPTCHA_INPUT_SELECTOR, result.text.replace(/\n|\s/g, ''))
+              .then((_) => {});
+        });
+
     /* const imageBuffer = await this.puppeteer.getImage("img");
 
     const res = await tess.recognize(imageBuffer);
