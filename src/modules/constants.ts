@@ -12,6 +12,10 @@ export const LOGIN_FORM_PASSWORD = '#txtPassword';
 
 export const LOGIN_FORM_SUBMIT_BTN = '#ext-gen24';
 
+export const CAPTCH_PAGE_SUBMIT_BTN = '#ctl08_ButAccept';
+
+export const COURSES_TABLE_SELECTOR = `div > #ctl08_GridView1`;
+
 export const CAPTCHA_INPUT_SELECTOR = `input[name="ctl08$CaptchaControl1"]`;
 
 export const SECOND_PAGE_NEXT_BUTTON_ID = '#ctl08_nextPage';
