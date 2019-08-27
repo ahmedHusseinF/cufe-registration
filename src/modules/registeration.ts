@@ -2,7 +2,6 @@ import puppeteer from 'puppeteer-core';
 // @ts-ignore
 import {TesseractWorker} from 'tesseract.js';
 import {resolve} from 'path';
-import {Login} from './login';
 import {
   CLOSED_REG_STRING,
   START_MSG_BUTTON_ID,
@@ -13,7 +12,6 @@ import {
   PASSWORD_INPUT_ID,
   CAPTCHA_INPUT_SELECTOR,
 } from './constants';
-import {truncate} from 'fs';
 
 export interface Course {
   code: string;
@@ -49,8 +47,6 @@ export class Registeration {
 
   /**
    * @desc converts normal day string to an index for window.TimeTable traversal
-   * @param {'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday'} day
-   * @return {number}
    */
   convertDay(day: 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday') {
     return this.days[day];
@@ -82,50 +78,35 @@ export class Registeration {
    * @param {string} password
    * @param {Course[]} courses
    */
-  async handleReg(username: string, password: string, courses: Course[]) {
-    const isLogged = await this.handleLogin(username, password);
+  async handleReg(password: string, courses: Course[]) {
+    let isOk = await this.initReg();
 
-    console.log({isLogged});
-
-    if (isLogged) {
-      let isOk = await this.initReg();
-
-      while (!isOk) {
-        isOk = await this.retry();
-      }
-
-      // all days should be indexed from 0 to 5
-      courses = courses.map((course) => {
-        if (typeof course.lecDay !== 'number') {
-          course.lecDay = this.convertDay(course.lecDay);
-        }
-        return course;
-      });
-
-      await this.selectLectures(courses);
-
-      const nextButton = await this.page.$(SECOND_PAGE_NEXT_BUTTON_ID);
-
-      if (!nextButton) {
-        return console.log('DRY RUNNNNNN');
-      }
-
-      await Promise.all([
-        this.page.waitForNavigation(navigationDOMWait),
-        this.page.click(SECOND_PAGE_NEXT_BUTTON_ID),
-      ]);
-
-      await this.handleCaptchaPage(password);
+    while (!isOk) {
+      isOk = await this.retry();
     }
-  }
 
-  /**
-   * @description handles login activity
-   * @param {string} username
-   * @param {string} password
-   */
-  async handleLogin(username: string, password: string) {
-    return await new Login(this.page).login(username, password);
+    // all days should be indexed from 0 to 5
+    courses = courses.map((course) => {
+      if (typeof course.lecDay !== 'number') {
+        course.lecDay = this.convertDay(course.lecDay);
+      }
+      return course;
+    });
+
+    await this.selectLectures(courses);
+
+    const nextButton = await this.page.$(SECOND_PAGE_NEXT_BUTTON_ID);
+
+    if (!nextButton) {
+      return console.log('DRY RUNNNNNN');
+    }
+
+    await Promise.all([
+      this.page.waitForNavigation(navigationDOMWait),
+      this.page.click(SECOND_PAGE_NEXT_BUTTON_ID),
+    ]);
+
+    await this.handleCaptchaPage(password);
   }
 
   /**
@@ -138,7 +119,7 @@ export class Registeration {
     await this.page.evaluate(function(courses) {
       // * BROWSER CONTEXT
       // * too much ts-ignore here because this is browser
-      // * and typescripts complains a lot
+      // * and typescript complains a lot
       // @ts-ignore
       courses.every((course) => {
         const {
@@ -243,14 +224,6 @@ export class Registeration {
               .then((_) => {});
         });
 
-    /* const imageBuffer = await this.puppeteer.getImage("img");
-
-    const res = await tess.recognize(imageBuffer);
-    console.log(res);
-
-    okra.decodeBuffer(imageBuffer, (...res) => {
-      console.log(...res);
-    }); */
     // await this.puppeteer.typeIntoField(
     //    `input[name="ctl08$CaptchaControl1"]`,
     //    result.text.toLowerCase()

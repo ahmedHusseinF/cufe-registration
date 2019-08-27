@@ -1,7 +1,18 @@
 # CUFE Auto-Registeration tool
 
 Now, after all these years. We have a tool to remove all the burdens of registeration every term ...
-TODO(ahmed): continue
+
+# Configuration
+
+Add the courses in the the courses.json file
+
+Days MUST be one of the following:
+
+- Sunday
+- Monday
+- Tuesday
+- Wednesday
+- Thursday
 
 # Installation
 

@@ -68,3 +68,5 @@ typings/
 
 # captcha images from tmp
 tmp/*.png
+*.js
+*.js.map

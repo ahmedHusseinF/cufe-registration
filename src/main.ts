@@ -1,6 +1,9 @@
 import dotenv from 'dotenv';
-import puppeteer from 'puppeteer-core';
+import {Pptr} from './modules/pptr';
+import {Login} from './modules/login';
+// import {TableFetcher} from './modules/fetcher';
 import {Registeration} from './modules/registeration';
+// require to parse json
 const courses = require('../courses.json');
 
 dotenv.config();
@@ -12,20 +15,22 @@ const PASSWORD = process.env.PASSWORD;
  * @desc Main async wrapper for the puppeteer code
  */
 async function main() {
-  const browser = await puppeteer.launch({
-    headless: false,
-    executablePath: process.env.PATH_TO_CHROME,
-  });
-
-  const currentTabs = await browser.pages();
-
-  const reg = new Registeration(currentTabs[0]);
-
   if (typeof ID === 'undefined' || typeof PASSWORD === 'undefined') {
     throw new TypeError(`ID and PASSWORD have to both exist in .env file`);
   }
 
-  await reg.handleReg(ID, PASSWORD, courses);
+  const page = await Pptr.bootstrap();
+
+  const login = new Login(page);
+  await login.login(ID, PASSWORD);
+
+  /* const fetcher = new TableFetcher(page);
+  const tables = await fetcher.getTableData(); */
+
+  const reg = new Registeration(page);
+  await reg.handleReg(PASSWORD, courses);
+
+  // await page.browser().close();
 }
 
 process.on('unhandledRejection', (...args) => {
