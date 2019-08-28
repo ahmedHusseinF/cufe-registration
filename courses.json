@@ -1,10 +1,56 @@
 [
   {
-    "code": "cmpn402",
-    "lecDay": "Wednesday",
-    "lecLocation": "3704",
-    "lecStart": 11,
-    "tutLocation": "18303",
+    "code": "cmpn405",
+    "lecDay": "Sunday",
+    "lecLocation": "3703",
+    "lecStart": 9,
+    "tutLocation": "3706",
     "tutStart": 8
+  },
+  {
+    "code": "cmpn446",
+    "lecDay": "Sunday",
+    "lecLocation": "3702",
+    "lecStart": 11,
+    "tutLocation": "3201",
+    "tutStart": 11
+  },
+  {
+    "code": "cmpn407",
+    "lecDay": "Sunday",
+    "lecLocation": "3702",
+    "lecStart": 2,
+    "tutLocation": "3708",
+    "tutStart": 4
+  },
+  {
+    "code": "cmpn450",
+    "lecDay": "Monday",
+    "lecLocation": "3707",
+    "lecStart": 4,
+    "tutLocation": "3702",
+    "tutStart": 4
+  },
+  {
+    "code": "elcn316",
+    "lecDay": "Tuesday",
+    "lecLocation": "18203",
+    "lecStart": 9,
+    "tutLocation": "20104",
+    "tutStart": 1
+  },
+  {
+    "code": "cmpn425",
+    "lecDay": "Tuesday",
+    "lecLocation": "3703",
+    "lecStart": 2,
+    "tutLocation": "3708",
+    "tutStart": 11
+  },
+  {
+    "code": "ccen480",
+    "lecDay": "Tuesday",
+    "lecLocation": "-",
+    "lecStart": 5
   }
 ]
