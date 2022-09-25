@@ -16,7 +16,7 @@
     "dotenv": "^6.2.0",
     "puppeteer-core": "^1.17.0",
     "tabletojson": "^1.0.4",
-    "tesseract.js": "^2.0.0-alpha.10"
+    "tesseract.js": "^2.1.5"
   },
   "devDependencies": {
     "@types/dotenv": "^6.1.0",
