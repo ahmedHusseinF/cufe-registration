@@ -70,3 +70,4 @@ typings/
 tmp/*.png
 *.js
 *.js.map
+package-lock.json
